@@ -43,7 +43,7 @@ export const verifyCertificate = async (
     addLog("ERROR: Connection to verification engine failed.");
     return {
       success: false,
-      verification_status: "fake",
+      verification_status: "failed",
       confidence: 0,
       reason: "API Connection Failed",
       message: error instanceof Error ? error.message : "Unknown error",

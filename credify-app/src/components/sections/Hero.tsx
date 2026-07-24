@@ -60,7 +60,7 @@ export default function Hero() {
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
         className="relative z-10 mt-12 w-full max-w-lg"
       >
-        {status === "idle" || status === "failed" ? (
+        {status === "idle" ? (
           <form onSubmit={handleVerify} className="glass-panel p-6 flex flex-col gap-4 text-left shadow-[0_0_20px_rgba(123,97,255,0.05)]">
             <div>
               <label className="text-xs uppercase tracking-widest text-gray-500 mb-2 block font-sora">Certificate URL (PDF/Image)</label>
@@ -90,9 +90,6 @@ export default function Hero() {
             >
               Run a Verification <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
-            {status === "failed" && (
-              <div className="text-red-500 text-xs text-center mt-2 font-data">Verification engine failed to connect.</div>
-            )}
           </form>
         ) : (
           <div className="glass-panel p-8 flex flex-col items-center gap-6 shadow-[0_0_30px_rgba(123,97,255,0.15)] border-plasma/30">
@@ -123,6 +120,26 @@ export default function Hero() {
                 <div className="text-red-500 font-sora uppercase tracking-widest font-bold">
                   Fraud Detected
                 </div>
+              </>
+            )}
+            {status === "failed" && (
+              <>
+                <div className="w-16 h-16 rounded-full bg-yellow-500/20 border border-yellow-500 flex items-center justify-center text-yellow-500 text-2xl font-bold font-sora">
+                  !
+                </div>
+                <div className="text-yellow-500 font-sora uppercase tracking-widest font-bold">
+                  Engine Offline
+                </div>
+                <div className="text-xs text-gray-400 font-data text-center max-w-xs">
+                  Next.js was unable to establish a connection with the n8n backend. Verify that your tunnel/server is online.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStatus("idle")}
+                  className="mt-2 px-6 py-2 border border-white/20 text-ghost text-xs uppercase tracking-wider hover:bg-white/5 transition-colors font-sora"
+                >
+                  Try Again
+                </button>
               </>
             )}
           </div>
