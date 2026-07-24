@@ -1,0 +1,177 @@
+{
+    "name": "CredifyAI_University_Registration",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "register-student-record",
+                "responseMode": "responseNode",
+                "options": {
+                    "allowedOrigins": "*"
+                }
+            },
+            "id": "webhook-id",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                250
+            ],
+            "webhookId": "register-student-webhook"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{ $node[\"Webhook\"].json.headers[\"authorization\"] }}",
+                            "value2": "Bearer UNIVERSITY_API_KEY"
+                        }
+                    ]
+                }
+            },
+            "id": "auth-id",
+            "name": "Validate API Key",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                450,
+                250
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://vbivqwwvznbkhrtrjzhz.supabase.co/rest/v1/student_records",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "roll_number",
+                            "value": "={{ $node[\"Webhook\"].json.body.roll_number }}"
+                        },
+                        {
+                            "name": "name",
+                            "value": "={{ $node[\"Webhook\"].json.body.name }}"
+                        },
+                        {
+                            "name": "program",
+                            "value": "={{ $node[\"Webhook\"].json.body.program }}"
+                        },
+                        {
+                            "name": "semester",
+                            "value": "={{ $node[\"Webhook\"].json.body.semester }}"
+                        },
+                        {
+                            "name": "issue_date",
+                            "value": "={{ $node[\"Webhook\"].json.body.issue_date }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "supabase-id",
+            "name": "Insert into Supabase",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                650,
+                150
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={\n  \"status\": \"error\",\n  \"message\": \"Unauthorized. Invalid API Key.\"\n}",
+                "options": {
+                    "responseCode": 401
+                }
+            },
+            "id": "error-id",
+            "name": "Return Error",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.4,
+            "position": [
+                650,
+                350
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Student certificate record registered in registry.\",\n  \"roll_number\": \"{{ $node[\"Webhook\"].json.body.roll_number }}\"\n}",
+                "options": {
+                    "responseCode": 201
+                }
+            },
+            "id": "success-id",
+            "name": "Return Success",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.4,
+            "position": [
+                850,
+                150
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Validate API Key",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Validate API Key": {
+            "main": [
+                [
+                    {
+                        "node": "Insert into Supabase",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Return Error",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Insert into Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Return Success",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

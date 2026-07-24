@@ -1,0 +1,9 @@
+# Ignore NextJS development files
+credify-app/node_modules/
+credify-app/.next/
+credify-app/out/
+credify-app/build/
+credify-app/.env*.local
+credify-app/next-env.d.ts
+credify-app/*.tsbuildinfo
+.DS_Store

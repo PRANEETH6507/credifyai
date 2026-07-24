@@ -1,0 +1,354 @@
+{
+  "name": "CredifyAI_VerifyProfile",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "credifyai-verify",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "1c7695f6-d60f-441d-8726-604bdc374ea8",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        6864,
+        1440
+      ],
+      "webhookId": "bad9bf72-6c99-4b0f-8bf4-91509697a08d"
+    },
+    {
+      "parameters": {
+        "url": "={{$json.body[\"certificate_url\"]}}",
+        "responseFormat": "file",
+        "dataPropertyName": "certificate",
+        "options": {
+          "followAllRedirects": true
+        }
+      },
+      "id": "586afad1-526d-4d55-b660-813a9dcdd105",
+      "name": "Download Certificate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        7088,
+        1440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ocr.space/parse/image",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "K82398775188957"
+            },
+            {
+              "name": "url",
+              "value": "={{ $node[\"Webhook\"].json.body.certificate_url }}"
+            },
+            {
+              "name": "language",
+              "value": "eng"
+            },
+            {
+              "name": "filetype",
+              "value": "pdf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7312,
+        1440
+      ],
+      "id": "fde3fac9-1768-48b1-8926-950678784732",
+      "name": "OCR.space"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ocrData = $json;\nconst text = ocrData.ParsedResults?.[0]?.ParsedText || \"\";\nconst exitCode = ocrData.OCRExitCode;\nconst errorMsg = ocrData.ErrorMessage || \"\";\n\n// 1. Check for engine errors (Error 99 etc)\nif (exitCode !== 1 && exitCode !== 2) {\n  return {\n    json: {\n      ocr_error: true,\n      error_details: errorMsg || \"The file could not be parsed. Possible corruption or invalid format.\"\n    }\n  };\n}\n\nconst t = text.replace(/\\r/g, \"\\n\");\nconst lines = t.split(\"\\n\").map(l => l.trim()).filter(Boolean);\nconst upperText = t.toUpperCase();\n\n// -------- ROLL NUMBER (12-digit normalization) --------\nlet roll_number = \"Not Detected\";\n\n// Extract ALL digit sequences\nconst digitSequences = t.match(/\\d+/g) || [];\n\nlet candidates = [];\n\n// collect possible 12-digit combinations\ndigitSequences.forEach(seq => {\n  if (seq.length === 12) {\n    candidates.push(seq);\n  }\n  if (seq.length > 12) {\n    for (let i = 0; i <= seq.length - 12; i++) {\n      candidates.push(seq.substring(i, i + 12));\n    }\n  }\n});\n\n// Remove leading OCR garbage zeros\ncandidates = candidates.map(c => c.replace(/^0+/, \"\"));\n\n// Prefer AU pattern (starts with 3 and length 12)\nlet valid = candidates.find(c => c.startsWith(\"3\") && c.length === 12);\n\nif (!valid && candidates.length > 0) {\n  valid = candidates[0];\n}\n\nif (valid) roll_number = valid;\n// -------- PROGRAM EXTRACTION --------\nlet program = \"Not Detected\";\n\nif (/B\\.?\\s*TECH/i.test(t) || /BACHELOR OF TECHNOLOGY/i.test(t)) {\n\n  if (/COMPUTER\\s*SCIENCE/i.test(t) || /CSE/i.test(t))\n    program = \"B.Tech CSE\";\n\n  else if (/MECHANICAL/i.test(t))\n    program = \"B.Tech Mechanical\";\n\n  else if (/ELECTRICAL/i.test(t) || /EEE/i.test(t))\n    program = \"B.Tech Electrical\";\n\n  else if (/ELECTRONICS/i.test(t) || /ECE/i.test(t))\n    program = \"B.Tech ECE\";\n\n  else\n    program = \"B.Tech\";\n}\n// -------- SEMESTER --------\nlet semester = \"Not Detected\";\n// Only match if it looks like a semester (1st digit 1-8, 2nd digit 1-4)\nconst semMatch = t.match(/([1-8])-([1-4])/) || t.match(/YEAR ([1-4]) SEMESTER ([1-2])/i) || t.match(/([1-8])\\/([1-4])/);\nif (semMatch) {\n  if (semMatch[0].includes(\"-\") || semMatch[0].includes(\"/\")) {\n    semester = semMatch[0];\n  } else {\n    semester = `${semMatch[1]}-${semMatch[2]}`;\n  }\n}\n\n// -------- NAME EXTRACTION --------\nlet name = \"Not Detected\";\nlet startIndex = lines.findIndex(l => l.toUpperCase().includes(\"A.U. COLLEGE OF ENGINEERING\"));\nif (startIndex !== -1) {\n  for (let i = startIndex + 1; i < Math.min(lines.length, startIndex + 15); i++) {\n    const cleaned = lines[i].replace(/[^A-Z\\s]/gi, \"\").trim().toUpperCase();\n    if (cleaned.split(/\\s+/).length < 2 || cleaned.length < 8) continue;\n    \n    const badWords = [\"UNIVERSITY\", \"COLLEGE\", \"MEMORANDUM\", \"ENGINEERING\", \"OFFICIAL\", \"OFFICE\"];\n    if (badWords.some(w => cleaned.includes(w))) continue;\n    \n    name = cleaned;\n    break;\n  }\n}\n\nreturn {\n  json: {\n    name,\n    roll_number,\n    program,\n    semester,\n    ocr_error: false\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7536,
+        1440
+      ],
+      "id": "b1b87337-82d7-4a56-a70a-2371a9da3577",
+      "name": "Extract_OCR_Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://vbivqwwvznbkhrtrjzhz.supabase.co/rest/v1/student_records",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "roll_number",
+              "value": "=eq.{{ $json.roll_number }}"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7760,
+        1440
+      ],
+      "id": "97d6841c-1986-449e-91dc-3ac806364bb1",
+      "name": "Fetch_Student_Record",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ocr = $items(\"Extract_OCR_Fields\")[0].json;\nconst webhook = $items(\"Webhook\")[0].json.body || {};\n\nif (ocr.ocr_error) {\n  return {\n    json: {\n      status: \"failed\",\n      confidence: 0,\n      reason: \"OCR failed to read certificate\"\n    }\n  };\n}\n\nconst dbRows = $items(\"Fetch_Student_Record\");\n\nif (!dbRows || dbRows.length === 0 || !dbRows[0].json) {\n  return {\n    json: {\n      status: \"fake\",\n      confidence: 0.1,\n      reason: `Roll number ${ocr.roll_number} not found in registry`\n    }\n  };\n}\n\nconst db = dbRows[0].json;\n\nlet score = 0;\nlet checks = [];\n\n// Roll number\nif (String(ocr.roll_number) === String(db.roll_number)) {\n  score += 2;\n  checks.push(\"Roll number confirmed\");\n}\n\n// Student Name Validation (OCR vs DB vs Form Input)\nconst formName = webhook.name || \"\";\nlet nameMatched = false;\nif (ocr.name && db.name) {\n  const ocrWords = ocr.name.toUpperCase().split(/\\s+/);\n  const dbWords = db.name.toUpperCase().split(/\\s+/);\n  const matches = ocrWords.filter(w => dbWords.some(d => d.includes(w) || w.includes(d)));\n  \n  if (matches.length >= 2) {\n    nameMatched = true;\n  }\n}\nif (formName && db.name) {\n  const formWords = formName.toUpperCase().split(/\\s+/);\n  const dbWords = db.name.toUpperCase().split(/\\s+/);\n  const formMatches = formWords.filter(w => dbWords.some(d => d.includes(w) || w.includes(d)));\n  if (formMatches.length >= Math.min(2, formWords.length)) {\n     nameMatched = true;\n  }\n}\nif (nameMatched) {\n  score += 1;\n  checks.push(\"Student name confirmed\");\n}\n\n// Program / Degree Validation\nconst formDegree = webhook.degree_name || \"\";\nlet degreeMatched = false;\nif (ocr.program && db.program && ocr.program.toUpperCase().includes(db.program.toUpperCase())) {\n  degreeMatched = true;\n}\nif (formDegree && db.program && formDegree.toUpperCase().includes(db.program.toUpperCase())) {\n  degreeMatched = true;\n}\nif (degreeMatched) {\n  score += 1;\n  checks.push(\"Program confirmed\");\n}\n\n// LinkedIn Validation (Optional Bonus)\nif (webhook.linkedin && webhook.linkedin.includes(\"linkedin.com/in/\")) {\n   checks.push(\"LinkedIn profile provided\");\n   score += 0.5;\n}\n\nlet status = \"fake\";\nlet confidence = score / 4.5; // Adjusted max score\nif (confidence > 1) confidence = 1.0;\n\nif (score >= 3.5) status = \"verified\";\nelse if (score >= 2) status = \"unclear\";\n\nreturn {\n  json: {\n    status,\n    confidence: parseFloat(confidence.toFixed(2)),\n    reason: checks.join(\" | \")\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7984,
+        1440
+      ],
+      "id": "af9733e2-aadc-45c7-aed2-af678ced31df",
+      "name": "Compare_OCR_with_DB"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vbivqwwvznbkhrtrjzhz.supabase.co/rest/v1/verifications",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "roll_number",
+              "value": "={{ $node[\"Extract_OCR_Fields\"].json.roll_number }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "confidence",
+              "value": "={{ $json.confidence }}"
+            },
+            {
+              "name": "reason",
+              "value": "={{ $json.reason }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8208,
+        1440
+      ],
+      "id": "2dc80f0f-93c5-48f4-93f6-4be25076b8ce",
+      "name": "Store_Verification_Result"
+    },
+    {
+      "parameters": {
+        "fromEmail": "Certificate Verification System pranee.eswar@gmail.com",
+        "toEmail": "={{ $node[\"Webhook\"].json.body.email }}",
+        "subject": "Your CredifyAI Verification Result",
+        "text": "=",
+        "html": "=<h2>Certificate Verification Result</h2>\n\n<p><strong>Status:</strong> {{ $node[\"Compare_OCR_with_DB\"].json.status }}</p>\n\n<p><strong>Confidence:</strong>\n{{ Math.round($node[\"Compare_OCR_with_DB\"].json.confidence * 100) }}%\n</p>\n\n<p><strong>Reason:</strong>\n{{ $node[\"Compare_OCR_with_DB\"].json.reason }}\n</p>\n\n<hr>\n\n<p>\nRoll Number:\n{{ $node[\"Extract_OCR_Fields\"].json.roll_number }}\n</p>\n\n<p>\nVerified At:\n{{ new Date().toLocaleString() }}\n</p>\n\n<p style=\"font-size:12px;color:gray;\">\nThis is an automated message generated by a demo academic verification system.\n</p>\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "cc5e6c75-6b4b-4647-9828-06fe35644431",
+      "name": "Send_Verification_Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        8432,
+        1440
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "JaFCQyGl05swRUBm",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"success\": $node[\"Compare_OCR_with_DB\"].json.status === \"verified\",\n  \"verification_status\": $node[\"Compare_OCR_with_DB\"].json.status,\n  \"confidence\": $node[\"Compare_OCR_with_DB\"].json.confidence,\n  \"reason\": $node[\"Compare_OCR_with_DB\"].json.reason,\n  \"student_name\": $node[\"Extract_OCR_Fields\"].json.name || \"Unknown\",\n  \"roll_number\": $node[\"Extract_OCR_Fields\"].json.roll_number || \"N/A\",\n  \"message\": $node[\"Compare_OCR_with_DB\"].json.status === 'verified' ? 'Certificate is valid' : 'Certificate not found or invalid'\n} }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        8656,
+        1440
+      ],
+      "id": "26160902-e59e-476a-9710-b6edc7f2e344",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Download Certificate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Certificate": {
+      "main": [
+        [
+          {
+            "node": "OCR.space",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR.space": {
+      "main": [
+        [
+          {
+            "node": "Extract_OCR_Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract_OCR_Fields": {
+      "main": [
+        [
+          {
+            "node": "Fetch_Student_Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch_Student_Record": {
+      "main": [
+        [
+          {
+            "node": "Compare_OCR_with_DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare_OCR_with_DB": {
+      "main": [
+        [
+          {
+            "node": "Store_Verification_Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store_Verification_Result": {
+      "main": [
+        [
+          {
+            "node": "Send_Verification_Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send_Verification_Email": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "d8b34f36-a1a3-4703-b485-0f326a3cd361",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4689dbd68b2afe405810958b3971f056f887f7ba488ef11ce9071ef24b763485"
+  },
+  "id": "N7gxCDvi0PdQRGbI",
+  "tags": []
+}
