@@ -110,6 +110,19 @@ export default function Hero() {
                 <div className="text-green-500 font-sora uppercase tracking-widest font-bold">
                   Verified Authentic
                 </div>
+                {result?.student_name && (
+                  <div className="text-xs text-gray-400 font-data text-center">
+                    Subject: <span className="text-ghost">{result.student_name}</span> <br/>
+                    Roll Number: <span className="text-ghost">{result.roll_number}</span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setStatus("idle")}
+                  className="mt-2 px-6 py-2 border border-white/20 text-ghost text-xs uppercase tracking-wider hover:bg-white/5 transition-colors font-sora"
+                >
+                  Verify Another
+                </button>
               </>
             )}
             {status === "fake" && (
@@ -120,6 +133,19 @@ export default function Hero() {
                 <div className="text-red-500 font-sora uppercase tracking-widest font-bold">
                   Fraud Detected
                 </div>
+                {result?.reason && (
+                  <div className="text-xs text-red-400/90 font-data text-center max-w-xs">
+                    <span className="font-semibold block mb-1">Reason: {result.reason}</span>
+                    {result.message && <p className="text-gray-400 mt-1 text-[11px] leading-relaxed">{result.message}</p>}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setStatus("idle")}
+                  className="mt-2 px-6 py-2 border border-white/20 text-ghost text-xs uppercase tracking-wider hover:bg-white/5 transition-colors font-sora"
+                >
+                  Try Again
+                </button>
               </>
             )}
             {status === "failed" && (

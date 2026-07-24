@@ -21,8 +21,29 @@ export async function POST(req: Request) {
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const text = await response.text();
+    if (!text) {
+      return NextResponse.json({
+        success: false,
+        verification_status: "fake",
+        confidence: 0,
+        reason: "Invalid Certificate File or URL",
+        message: "The verification engine was unable to download or process the certificate file. Make sure the link is a direct public URL to a PDF/image."
+      });
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return NextResponse.json(data);
+    } catch (e) {
+      return NextResponse.json({
+        success: false,
+        verification_status: "fake",
+        confidence: 0,
+        reason: "Invalid JSON from verification engine",
+        message: text
+      });
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     console.error("Error proxying verification request:", error);
