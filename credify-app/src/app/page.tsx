@@ -14,13 +14,11 @@ export default function Home() {
       {/* 3D Background - Fixed behind everything */}
       <HeroScene />
       
+      {/* Navbar at root to guarantee correct stacking context */}
+      <Navbar />
+      
       {/* UI Overlay */}
       <div className="relative z-10 flex flex-col min-h-screen pointer-events-none">
-        
-        {/* Navbar */}
-        <div className="pointer-events-auto">
-          <Navbar />
-        </div>
         
         {/* Sections */}
         <Hero />

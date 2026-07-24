@@ -7,19 +7,20 @@ export const verifyCertificate = async (
   setScore: (score: number) => void
 ): Promise<N8nResult> => {
   try {
-    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || "http://localhost:5678/webhook/credifyai-verify";
+    // Relative API endpoint to proxy through Next.js server-side route
+    const relativeUrl = "/api/verify";
     
     addLog("Initiating secure connection...");
-    addLog(`Target: ${webhookUrl}`);
+    addLog(`Target: ${relativeUrl}`);
     
-    // Simulate some early telemetry before the actual request resolves
+    // Simulate telemetry steps while request is processing
     setTimeout(() => addLog("Downloading certificate..."), 500);
     setTimeout(() => addLog("Initializing OCR Engine..."), 1500);
     setTimeout(() => { setScore(12); addLog("Scanning for cryptographic signatures..."); }, 2500);
     setTimeout(() => { setScore(45); addLog("Extracting layout metadata..."); }, 3500);
     setTimeout(() => { setScore(72); addLog("Awaiting database cross-verification..."); }, 5000);
 
-    const response = await fetch(webhookUrl, {
+    const response = await fetch(relativeUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

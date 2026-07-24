@@ -29,7 +29,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center pointer-events-auto">
+    <section className="relative z-10 flex flex-col items-center justify-center min-h-screen pt-24 pb-12 px-4 text-center pointer-events-auto">
       <div className="absolute inset-0 z-0 opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
       <motion.div

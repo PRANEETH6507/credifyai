@@ -8,19 +8,19 @@ export default function Protocol() {
       num: "01",
       title: "Ingest",
       desc: "Secure certificate intake & URL parsing.",
-      top: "top-24"
+      top: "top-24 md:top-28"
     },
     {
       num: "02",
       title: "Analyze",
       desc: "OCR extraction + structured database matching.",
-      top: "top-32"
+      top: "top-36 md:top-40"
     },
     {
       num: "03",
       title: "Score",
       desc: "Trust index computation + fraud risk classification.",
-      top: "top-40"
+      top: "top-48 md:top-52"
     }
   ];
 

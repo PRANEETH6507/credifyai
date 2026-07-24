@@ -12,17 +12,18 @@ export default function ShieldTotem() {
 
   useFrame((state) => {
     if (groupRef.current && meshRef.current) {
-      // Idle breathing/floating
-      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.2;
+      const scrollY = scrollData.offset;
+      const isMobile = state.viewport.width < 6;
+      const baseScale = isMobile ? 0.65 : 1.0;
+      const scale = (1 - scrollY * 0.3) * baseScale;
+      groupRef.current.scale.set(scale, scale, scale);
+
+      // Idle breathing/floating + responsive offset
+      groupRef.current.position.y = (Math.sin(state.clock.elapsedTime * 0.5) * 0.2) + (isMobile ? -0.8 : 0);
       
       // Scroll-driven rotation (scrollData.offset goes from 0 to 1)
-      const scrollY = scrollData.offset;
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.2 + scrollY * Math.PI * 4;
       meshRef.current.rotation.x = scrollY * Math.PI;
-      
-      // Scale down slightly as user scrolls down
-      const scale = 1 - scrollY * 0.3;
-      groupRef.current.scale.set(scale, scale, scale);
     }
   });
 
