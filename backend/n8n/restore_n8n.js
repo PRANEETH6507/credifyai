@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 const originalCodeNode = {
   parameters: {
@@ -11,14 +12,17 @@ const originalCodeNode = {
   position: [720, -64]
 };
 
+// Relative paths inside the backend directory
 const filePaths = [
-    'C:/Users/eswar/Desktop/CredifyAI Frontend/CredifyAI_Verification_v2.json',
-    'C:/Users/eswar/.n8n-local/registry_verify.json'
+    path.join(__dirname, 'CredifyAI_Verification_v2.json')
 ];
 
 filePaths.forEach(filepath => {
     try {
-        if (!fs.existsSync(filepath)) return;
+        if (!fs.existsSync(filepath)) {
+            console.log('File not found:', filepath);
+            return;
+        }
         
         let data = JSON.parse(fs.readFileSync(filepath, 'utf8'));
         let modified = false;
@@ -26,7 +30,6 @@ filePaths.forEach(filepath => {
         if (data.nodes) {
             const index = data.nodes.findIndex(n => n.name === 'Generate_Certificate_Hash');
             if (index !== -1) {
-                // Keep the exact ID and position if it differs slightly
                 const currentNode = data.nodes[index];
                 const restoredNode = { ...originalCodeNode };
                 restoredNode.id = currentNode.id || restoredNode.id;

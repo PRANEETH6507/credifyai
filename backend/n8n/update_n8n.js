@@ -16,11 +16,10 @@ const cryptoNodeTemplate = {
   position: [720, -64]
 };
 
+// Relative paths inside the backend directory
 const filePaths = [
-    'C:/Users/eswar/Desktop/CredifyAI Frontend/CredifyAI_Verification_v2.json',
-    'C:/Users/eswar/Desktop/CredifyAI Frontend/CredifyAI_University_Registration.json',
-    'C:/Users/eswar/.n8n-local/registry_verify.json',
-    'C:/Users/eswar/.n8n-local/registry_register.json'
+    path.join(__dirname, 'CredifyAI_Verification_v2.json'),
+    path.join(__dirname, 'CredifyAI_University_Registration.json')
 ];
 
 filePaths.forEach(filepath => {
@@ -36,13 +35,11 @@ filePaths.forEach(filepath => {
         if (data.nodes) {
             const index = data.nodes.findIndex(n => n.name === 'Generate_Certificate_Hash');
             if (index !== -1) {
-                // Keep original ID and Position
                 const originalNode = data.nodes[index];
                 const newNode = { ...cryptoNodeTemplate };
                 newNode.id = originalNode.id || newNode.id;
                 newNode.position = originalNode.position || newNode.position;
                 
-                // Swap the Code node with the new Crypto node
                 data.nodes[index] = newNode;
                 modified = true;
             }

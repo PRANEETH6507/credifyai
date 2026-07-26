@@ -2,10 +2,10 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// n8n uses /rest/login for auth
+// Safe configuration loading credentials from env variables
 const loginPayload = JSON.stringify({
-    emailOrLdapLoginId: 'pranee.eswar@gmail.com',
-    password: 'Praneeth@6507'
+    emailOrLdapLoginId: process.env.N8N_USER_EMAIL || 'admin@example.com',
+    password: process.env.N8N_USER_PASSWORD || 'password123'
 });
 
 function makeRequest(options, body) {
@@ -24,8 +24,7 @@ function makeRequest(options, body) {
 }
 
 async function main() {
-    // Step 1: Login
-    console.log('Logging in...');
+    console.log('Logging in to local n8n instance...');
     const loginRes = await makeRequest({
         hostname: 'localhost',
         port: 5678,
@@ -38,19 +37,20 @@ async function main() {
     
     if (loginRes.status !== 200) {
         console.log('Response:', loginRes.body.substring(0, 300));
+        console.log('Ensure N8N_USER_EMAIL and N8N_USER_PASSWORD are set correctly.');
         return;
     }
     
     const cookies = loginRes.headers['set-cookie'];
     const cookieHeader = cookies ? cookies.map(c => c.split(';')[0]).join('; ') : '';
-    console.log('Cookies:', cookieHeader ? 'OK' : 'NONE');
     
-    // Step 2: Get current workflow to get versionId
-    console.log('Fetching current workflow...');
+    // Fetch current workflow
+    const workflowId = process.env.N8N_WORKFLOW_ID || 'N7gxCDvi0PdQRGbI';
+    console.log(`Fetching current workflow ${workflowId}...`);
     const getRes = await makeRequest({
         hostname: 'localhost',
         port: 5678,
-        path: '/rest/workflows/N7gxCDvi0PdQRGbI',
+        path: `/rest/workflows/${workflowId}`,
         method: 'GET',
         headers: { 'Cookie': cookieHeader }
     });
@@ -66,13 +66,16 @@ async function main() {
     const versionId = currentWorkflow.data?.versionId || currentWorkflow.versionId;
     console.log('Version ID:', versionId);
     
-    // Step 3: Load local JSON
+    // Load local JSON relative to script directory
     const localJsonPath = path.join(__dirname, 'CredifyAI_Verification_v2.json');
+    if (!fs.existsSync(localJsonPath)) {
+        console.error(`Local JSON file not found at: ${localJsonPath}`);
+        return;
+    }
     const localWorkflow = JSON.parse(fs.readFileSync(localJsonPath, 'utf8'));
     
     console.log('Pushing full workflow update from local JSON...');
     
-    // Step 4: Push the update
     const updatePayload = JSON.stringify({
         name: localWorkflow.name,
         nodes: localWorkflow.nodes,
@@ -85,7 +88,7 @@ async function main() {
     const updateRes = await makeRequest({
         hostname: 'localhost',
         port: 5678,
-        path: '/rest/workflows/N7gxCDvi0PdQRGbI',
+        path: `/rest/workflows/${workflowId}`,
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
