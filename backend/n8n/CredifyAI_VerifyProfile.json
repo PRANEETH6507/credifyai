@@ -48,7 +48,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "K82398775188957"
+              "value": "YOUR_OCR_SPACE_API_KEY"
             },
             {
               "name": "url",
@@ -91,7 +91,7 @@
     },
     {
       "parameters": {
-        "url": "https://vbivqwwvznbkhrtrjzhz.supabase.co/rest/v1/student_records",
+        "url": "https://YOUR_SUPABASE_PROJECT_REF.supabase.co/rest/v1/student_records",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -110,11 +110,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+              "value": "YOUR_SUPABASE_ANON_KEY"
             },
             {
               "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+              "value": "Bearer YOUR_SUPABASE_ANON_KEY"
             },
             {
               "name": "Accept",
@@ -151,17 +151,17 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://vbivqwwvznbkhrtrjzhz.supabase.co/rest/v1/verifications",
+        "url": "https://YOUR_SUPABASE_PROJECT_REF.supabase.co/rest/v1/verifications",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+              "value": "YOUR_SUPABASE_ANON_KEY"
             },
             {
               "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiaXZxd3d2em5ia2hydHJqemh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MDkyMzUsImV4cCI6MjEwMDM4NTIzNX0.U5zW2Nh6qQk7HlgOphP3jPmOyMjd0unyrWNQeBE9Mio"
+              "value": "Bearer YOUR_SUPABASE_ANON_KEY"
             },
             {
               "name": "Content-Type",
@@ -203,7 +203,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "Certificate Verification System pranee.eswar@gmail.com",
+        "fromEmail": "Certificate Verification System YOUR_EMAIL@example.com",
         "toEmail": "={{ $node[\"Webhook\"].json.body.email }}",
         "subject": "Your CredifyAI Verification Result",
         "text": "=",
