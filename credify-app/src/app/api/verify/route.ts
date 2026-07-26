@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     try {
       const data = JSON.parse(text);
       return NextResponse.json(data);
-    } catch (e) {
+    } catch {
       return NextResponse.json({
         success: false,
         verification_status: "fake",

@@ -9,7 +9,7 @@ import { verifyCertificate } from "@/lib/api";
 export default function Hero() {
   const [url, setUrl] = useState("");
   const [email, setEmail] = useState("");
-  const { status, setStatus, setScore, setResult, addLog } = useVerification();
+  const { status, setStatus, setScore, result, setResult, addLog } = useVerification();
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
