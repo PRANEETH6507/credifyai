@@ -5,6 +5,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "credifyai_super_secret_session_key
 const SUPABASE_URL = process.env.SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
 
+export const dynamic = "force-dynamic";
+
 function verifyToken(token: string): boolean {
   try {
     const parts = token.split(".");
@@ -96,7 +98,16 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ success: true, records: aggregated, all_verifications: verifications });
+    return NextResponse.json(
+      { success: true, records: aggregated, all_verifications: verifications },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
+        }
+      }
+    );
   } catch {
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }

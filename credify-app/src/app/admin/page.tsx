@@ -66,7 +66,7 @@ export default function AdminDashboard() {
 
   const fetchRecords = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/records");
+      const res = await fetch(`/api/admin/records?t=${Date.now()}`);
       if (res.status === 401) {
         router.push("/admin/login");
         return;
