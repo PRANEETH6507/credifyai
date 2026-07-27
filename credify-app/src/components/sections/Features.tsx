@@ -10,7 +10,7 @@ export default function Features() {
 
 
   return (
-    <section className="relative z-10 w-full py-24 px-6 pointer-events-auto bg-void">
+    <section id="features" className="relative z-10 w-full py-24 px-6 pointer-events-auto bg-void">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Card 1 — Diagnostic Shuffler */}

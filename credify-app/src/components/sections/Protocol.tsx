@@ -25,7 +25,7 @@ export default function Protocol() {
   ];
 
   return (
-    <section className="relative z-10 w-full py-32 px-6 bg-void pointer-events-auto min-h-[150vh]">
+    <section id="protocol" className="relative z-10 w-full py-32 px-6 bg-void pointer-events-auto min-h-[150vh]">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-4xl font-sora font-semibold text-ghost mb-16 text-center uppercase tracking-widest">
           The Protocol

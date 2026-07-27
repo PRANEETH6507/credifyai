@@ -24,9 +24,9 @@ export default function Navbar() {
         
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400 uppercase tracking-widest font-sora">
-          <a href="#" className="hover:text-plasma transition-colors">Verify</a>
-          <a href="#" className="hover:text-plasma transition-colors">Network</a>
-          <a href="#" className="hover:text-plasma transition-colors">Documentation</a>
+          <a href="/#verify" className="hover:text-plasma transition-colors">Verify</a>
+          <a href="/#protocol" className="hover:text-plasma transition-colors">Network</a>
+          <a href="/#features" className="hover:text-plasma transition-colors">Documentation</a>
         </div>
 
         {/* Mobile menu trigger */}
@@ -50,21 +50,21 @@ export default function Navbar() {
           >
             <div className="flex flex-col items-center gap-8 text-lg font-medium text-gray-400 uppercase tracking-widest font-sora">
               <a 
-                href="#" 
+                href="/#verify" 
                 onClick={() => setIsOpen(false)} 
                 className="hover:text-plasma transition-colors"
               >
                 Verify
               </a>
               <a 
-                href="#" 
+                href="/#protocol" 
                 onClick={() => setIsOpen(false)} 
                 className="hover:text-plasma transition-colors"
               >
                 Network
               </a>
               <a 
-                href="#" 
+                href="/#features" 
                 onClick={() => setIsOpen(false)} 
                 className="hover:text-plasma transition-colors"
               >

@@ -35,12 +35,14 @@
 │       └── restore_n8n.js                         # Node restoration script
 ├── credify-app/                                   # Next.js Frontend Application
 │   ├── src/
-│   │   ├── app/                                   # Page routes & API proxy handlers
+│   │   ├── app/                                   
+│   │   │   ├── admin/                             # University admin portal & login views
+│   │   │   ├── api/                               # Secure API handlers & n8n proxies
+│   │   │   └── page.tsx                           # Public verification homepage
 │   │   ├── components/                            # R3F canvas & page sections
 │   │   └── context/                               # Global state managers
 │   ├── .npmrc                                     # Legacy peer dependency configuration
 │   └── next.config.mjs                            # NextJS configuration
-├── Testing Certificates/                           # Mock university certificate files (PDFs/Images)
 └── LICENSE                                        # MIT License
 ```
 
@@ -48,7 +50,32 @@
 
 ## ⚙️ Installation & Setup
 
-### 1. Frontend Setup (Next.js)
+### 1. Database Schema Setup (Supabase)
+Create the following two tables in your Supabase database console:
+
+```sql
+-- 1. Student registry table
+CREATE TABLE student_records (
+    roll_number VARCHAR PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    program VARCHAR NOT NULL,
+    semester VARCHAR,
+    sgpa NUMERIC,
+    issue_date DATE
+);
+
+-- 2. Audit/Verification attempt logs table
+CREATE TABLE verifications (
+    id SERIAL PRIMARY KEY,
+    roll_number VARCHAR REFERENCES student_records(roll_number) ON DELETE CASCADE,
+    status VARCHAR NOT NULL,
+    confidence NUMERIC,
+    reason TEXT,
+    verified_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 2. Frontend Configuration (Next.js)
 
 1. Navigate to the app directory:
    ```bash
@@ -58,9 +85,22 @@
    ```bash
    npm install
    ```
-3. Create a `.env.local` file:
+3. Create a `.env.local` file with the following variables:
    ```env
+   # Database connection
+   SUPABASE_URL=https://your-supabase-project.supabase.co
+   SUPABASE_ANON_KEY=your-supabase-anon-key
+
+   # n8n Automation Engine Webhooks
    N8N_WEBHOOK_URL=http://localhost:5678/webhook/credifyai-verify
+
+   # Registrar Admin Panel Credentials
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=admin@credifyai
+   JWT_SECRET=super_secret_session_key_for_registrar
+
+   # Registry security token for n8n API calls
+   UNIVERSITY_API_KEY=your-secret-api-key
    ```
 4. Run in development:
    ```bash
@@ -71,37 +111,17 @@
    npm run build
    ```
 
-### 2. Backend Setup (n8n & Supabase)
-
-1. Make sure **n8n** is running on your machine:
-   ```bash
-   n8n start
-   ```
-2. Open your local n8n instance (`http://localhost:5678`) and import the workflow file:
-   `backend/n8n/CredifyAI_VerifyProfile.json`.
-3. Set up a PostgreSQL table named `student_records` in your Supabase database:
-   ```sql
-   CREATE TABLE student_records (
-       roll_number VARCHAR PRIMARY KEY,
-       name VARCHAR NOT NULL,
-       program VARCHAR NOT NULL,
-       semester VARCHAR,
-       sgpa NUMERIC,
-       issue_date DATE
-   );
-   ```
-4. Activate the n8n workflow.
-
 ---
 
-## 🧪 Testing Locally vs Production
+## ⚡ Production Deployment (Vercel)
 
-### Local Testing with Tunnel
-To test n8n webhooks from the deployed Vercel instance, expose n8n using a secure SSH tunnel:
-```bash
-ssh -R 80:127.0.0.1:5678 nokey@localhost.run
-```
-Copy the generated `https://xxxx.lhr.life` URL, configure it as `N8N_WEBHOOK_URL` in your Vercel Dashboard, and trigger a **Redeploy**.
+1. **Deploy to Vercel**: Connect this GitHub repository directly to Vercel.
+2. **Environment Variables**: Add all variables defined in `.env.local` inside the Vercel project configuration dashboard.
+3. **Tunneling (Local Backend)**: If running n8n locally on your system, expose it to Vercel via:
+   ```bash
+   ssh -R 80:127.0.0.1:5678 nokey@localhost.run
+   ```
+   Copy the generated `https://xxxx.lhr.life` URL, configure it as `N8N_WEBHOOK_URL` in the Vercel project dashboard, and trigger a **Redeploy**.
 
 ---
 

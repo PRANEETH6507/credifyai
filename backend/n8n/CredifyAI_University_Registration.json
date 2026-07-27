@@ -83,6 +83,10 @@
                         {
                             "name": "issue_date",
                             "value": "={{ $node[\"Webhook\"].json.body.issue_date }}"
+                        },
+                        {
+                            "name": "sgpa",
+                            "value": "={{ $node[\"Webhook\"].json.body.sgpa }}"
                         }
                     ]
                 },
